@@ -33,3 +33,5 @@ pnpm-debug.log*
 ref.html
 ref.css
 ref-font.css
+
+.vercel

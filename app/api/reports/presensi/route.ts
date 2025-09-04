@@ -61,13 +61,11 @@ export async function GET(req: Request) {
       const key = new Date(r.tanggal).toISOString().slice(0,10)
       const row = buckets.get(key)
       if (!row) continue
-      // @ts-expect-error enum index
       row[r.status]++
     }
 
     const data = Array.from(buckets.entries()).map(([date, v]) => ({ date, ...v }))
     const totals = records.reduce((acc, cur) => {
-      // @ts-expect-error enum index
       acc[cur.status]++
       return acc
     }, { HADIR: 0, IZIN: 0, SAKIT: 0, ALPA: 0 } as any)

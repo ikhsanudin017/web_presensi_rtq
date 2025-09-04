@@ -41,7 +41,6 @@ export default async function LaporanPage() {
     const key = new Date(p.tanggal).toISOString().slice(0,10)
     const row = byDay.get(key)
     if (!row) continue
-    // @ts-expect-error index by enum
     row[p.status]++
   }
   const chartData: AttendanceDataPoint[] = Array.from(byDay.entries()).map(([date, v]) => ({ date, ...v }))

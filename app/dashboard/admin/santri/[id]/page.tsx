@@ -15,7 +15,7 @@ export default async function EditSantriPage({ params }: { params: { id: string 
       <Nav />
       <main className="p-6 max-w-2xl mx-auto space-y-4">
         <h1 className="text-2xl font-semibold">Edit Santri</h1>
-        <EditForm santri={santri} />
+        <EditForm santri={{...santri, tanggalLahir: santri.tanggalLahir?.toISOString().slice(0,10) || null }} />
       </main>
     </div>
   )

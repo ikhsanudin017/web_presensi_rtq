@@ -14,7 +14,7 @@
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "types": ["node", "next", "next/types", "next/image-types"],
+    "types": ["node", "next", "next/types"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
