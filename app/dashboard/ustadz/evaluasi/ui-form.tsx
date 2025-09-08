@@ -45,7 +45,7 @@ export default function EvaluasiForm({ santri }: { santri: { id: string; nama: s
       </div>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {ok && <p className="text-green-600 text-sm">Tersimpan.</p>}
-      <button disabled={loading} className="px-4 py-2 rounded bg-blue-600 text-white">{loading ? 'Menyimpan…' : 'Simpan'}</button>
+      <button disabled={loading} className="px-4 py-2 rounded bg-primary hover:bg-primaryDark text-white transition-colors">{loading ? 'Menyimpan…' : 'Simpan'}</button>
     </form>
   )
 }

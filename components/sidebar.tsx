@@ -19,7 +19,7 @@ export default function Sidebar({ items }: { items: MenuItem[] }) {
               className={
                 'px-3 py-2 rounded transition-colors ' +
                 (active
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary text-white'
                   : 'hover:bg-gray-100 dark:hover:bg-gray-800')
               }
             >
@@ -31,4 +31,3 @@ export default function Sidebar({ items }: { items: MenuItem[] }) {
     </aside>
   )
 }
-

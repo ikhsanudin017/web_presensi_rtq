@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const data = userCreateSchema.parse(json)
     const hashed = await bcrypt.hash(data.password, 10)
     const user = await prisma.user.create({
-      data: { name: data.name, email: data.email, password: hashed, role: data.role, phone: data.phone }
+      data: { name: data.name, username: data.username.toLowerCase(), email: data.email.toLowerCase(), password: hashed, role: data.role, phone: data.phone }
     })
     await logAudit({ userId: (session.user as any).id, action: 'CREATE_USER', entity: 'User', entityId: user.id, meta: { email: user.email }, ip })
     return NextResponse.json({ user })
@@ -38,4 +38,3 @@ export async function GET() {
     return NextResponse.json({ error: e.message ?? 'Error' }, { status: e.message === 'FORBIDDEN' ? 403 : e.message === 'UNAUTHORIZED' ? 401 : 400 })
   }
 }
-

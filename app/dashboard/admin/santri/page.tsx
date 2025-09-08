@@ -18,7 +18,7 @@ export default async function SantriListPage() {
       <main className="p-6 max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Data Santri</h1>
-          <Link href="/dashboard/admin/santri/new" className="px-3 py-2 rounded bg-blue-600 text-white">Tambah Santri</Link>
+          <Link href="/dashboard/admin/santri/new" className="px-3 py-2 rounded bg-primary hover:bg-primaryDark text-white transition-colors">Tambah Santri</Link>
         </div>
         <div className="overflow-x-auto border rounded">
           <table className="min-w-full text-sm">
@@ -39,7 +39,7 @@ export default async function SantriListPage() {
                   <td className="px-3 py-2">{s.parent?.name ?? '-'}</td>
                   <td className="px-3 py-2">{s.kelas?.nama ?? '-'}</td>
                   <td className="px-3 py-2">
-                    <Link href={`/dashboard/admin/santri/${s.id}`} className="text-blue-600">Edit</Link>
+                    <Link href={`/dashboard/admin/santri/${s.id}`} className="text-primary hover:underline">Edit</Link>
                   </td>
                 </tr>
               ))}
@@ -50,4 +50,3 @@ export default async function SantriListPage() {
     </div>
   )
 }
-

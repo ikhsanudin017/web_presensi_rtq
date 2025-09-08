@@ -1,43 +1,14 @@
-"use client"
-import { signIn } from 'next-auth/react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    const res = await signIn('credentials', { redirect: false, email, password })
-    setLoading(false)
-    if (res?.ok) router.push('/dashboard/admin')
-    else setError('Email atau password salah')
-  }
-
+export default function LoginChooser() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 border rounded p-6 bg-white dark:bg-gray-900">
-        <h1 className="text-2xl font-semibold">Masuk</h1>
-        <div>
-          <label className="block text-sm mb-1">Email</label>
-          <input className="w-full border rounded px-3 py-2 bg-transparent" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+      <div className="w-full max-w-md space-y-4 border rounded p-6 bg-white dark:bg-gray-900">
+        <h1 className="text-2xl font-semibold">Pilih Jenis Login</h1>
+        <p className="text-sm opacity-80">Silakan pilih halaman login sesuai peran Anda.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+          <a href="/login/ustadz" className="block text-center px-4 py-3 rounded bg-primary hover:bg-primaryDark text-white">Login Ustadz</a>
+          <a href="/login/orangtua" className="block text-center px-4 py-3 rounded border border-primary text-primary hover:bg-primary hover:text-white transition">Login Orang Tua</a>
         </div>
-        <div>
-          <label className="block text-sm mb-1">Password</label>
-          <input className="w-full border rounded px-3 py-2 bg-transparent" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-        </div>
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        <button disabled={loading} className="w-full bg-blue-600 text-white rounded py-2">
-          {loading ? 'Memproses…' : 'Masuk'}
-        </button>
-      </form>
+      </div>
     </main>
   )
 }
-

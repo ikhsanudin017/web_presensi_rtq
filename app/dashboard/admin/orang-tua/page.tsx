@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import ResetPasswordInline from '@/components/reset-password-inline'
 
 export default async function OrangTuaListPage() {
   const session = await getServerSession(authOptions)
@@ -15,23 +16,27 @@ export default async function OrangTuaListPage() {
       <main className="p-6 max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Data Orang Tua</h1>
-          <Link href="/dashboard/admin/orang-tua/new" className="px-3 py-2 rounded bg-blue-600 text-white">Tambah Orang Tua</Link>
+          <Link href="/dashboard/admin/orang-tua/new" className="px-3 py-2 rounded bg-primary hover:bg-primaryDark text-white transition-colors">Tambah Orang Tua</Link>
         </div>
         <div className="overflow-x-auto border rounded">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
                 <th className="text-left px-3 py-2">Nama</th>
+                <th className="text-left px-3 py-2">Username</th>
                 <th className="text-left px-3 py-2">Email</th>
                 <th className="text-left px-3 py-2">Telepon</th>
+                <th className="text-left px-3 py-2">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {orangTua.map(u => (
                 <tr key={u.id} className="border-t">
                   <td className="px-3 py-2">{u.name}</td>
+                  <td className="px-3 py-2">{(u as any).username ?? '-'}</td>
                   <td className="px-3 py-2">{u.email}</td>
                   <td className="px-3 py-2">{u.phone ?? '-'}</td>
+                  <td className="px-3 py-2"><ResetPasswordInline userId={u.id} /></td>
                 </tr>
               ))}
             </tbody>
@@ -41,4 +46,3 @@ export default async function OrangTuaListPage() {
     </div>
   )
 }
-

@@ -9,12 +9,11 @@ export default function ChartModeToggle({ data }: { data: AttendanceDataPoint[] 
       <div className="flex items-center gap-2">
         <span className="text-sm">Mode:</span>
         <div className="inline-flex rounded border overflow-hidden">
-          <button className={`px-3 py-1 text-sm ${mode==='percent'?'bg-blue-600 text-white':''}`} onClick={()=>setMode('percent')}>Persen</button>
-          <button className={`px-3 py-1 text-sm ${mode==='count'?'bg-blue-600 text-white':''}`} onClick={()=>setMode('count')}>Jumlah</button>
+          <button className={`px-3 py-1 text-sm ${mode==='percent'?'bg-primary text-white':''}`} onClick={()=>setMode('percent')}>Persen</button>
+          <button className={`px-3 py-1 text-sm ${mode==='count'?'bg-primary text-white':''}`} onClick={()=>setMode('count')}>Jumlah</button>
         </div>
       </div>
       <AttendanceChart data={data} mode={mode} />
     </div>
   )
 }
-

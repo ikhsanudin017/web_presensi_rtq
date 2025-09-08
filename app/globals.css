@@ -4,12 +4,12 @@
 
 /* Simple CSS vars for light/dark tokens */
 :root {
-  --bg: 255 255 255;
-  --fg: 17 24 39;
+  --bg: 249 250 251;
+  --fg: 13 18 22;
 }
 .dark {
-  --bg: 17 24 39;
-  --fg: 243 244 246;
+  --bg: 13 18 22;
+  --fg: 249 250 251;
 }
 
 html, body, #__next {

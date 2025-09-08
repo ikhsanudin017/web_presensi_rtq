@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 export default function NewOrangTuaPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' })
+  const [form, setForm] = useState({ name: '', username: '', email: '', password: '', phone: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,6 +30,10 @@ export default function NewOrangTuaPage() {
             <input className="w-full border rounded px-3 py-2 bg-transparent" value={form.name} onChange={e=>setForm(f=>({...f, name:e.target.value}))} required />
           </div>
           <div>
+            <label className="block text-sm">Username</label>
+            <input className="w-full border rounded px-3 py-2 bg-transparent" value={form.username} onChange={e=>setForm(f=>({...f, username:e.target.value}))} required />
+          </div>
+          <div>
             <label className="block text-sm">Email</label>
             <input type="email" className="w-full border rounded px-3 py-2 bg-transparent" value={form.email} onChange={e=>setForm(f=>({...f, email:e.target.value}))} required />
           </div>
@@ -43,7 +47,7 @@ export default function NewOrangTuaPage() {
           </div>
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <div className="flex gap-2">
-            <button disabled={loading} className="px-4 py-2 rounded bg-blue-600 text-white">{loading ? 'Menyimpan…' : 'Simpan'}</button>
+            <button disabled={loading} className="px-4 py-2 rounded bg-primary hover:bg-primaryDark text-white transition-colors">{loading ? 'Menyimpan…' : 'Simpan'}</button>
             <button type="button" className="px-4 py-2 rounded border" onClick={()=>router.back()}>Batal</button>
           </div>
         </form>
@@ -51,4 +55,3 @@ export default function NewOrangTuaPage() {
     </div>
   )
 }
-

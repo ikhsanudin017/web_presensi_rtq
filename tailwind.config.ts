@@ -10,10 +10,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#8b3dff',
-        primaryDark: '#7731d8',
-        primaryMuted: '#e7dbff',
-        teal: '#00c4cc',
+        // Brand: blue (matching logo)
+        primary: '#0ea5e9',
+        primaryDark: '#0284c7',
+        primaryMuted: '#e0f2fe',
         success: '#36a137',
         successDark: '#096d11',
         info: '#1962ff',
@@ -21,8 +21,8 @@ export default {
         danger: '#db142c',
         base: {
           900: '#0d1216',
-          50: '#f6f7f8',
-          100: '#f0f1f5',
+          50: '#f9fafb',
+          100: '#f3f4f6',
         },
       },
     },

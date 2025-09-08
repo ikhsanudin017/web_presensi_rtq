@@ -60,7 +60,7 @@ export default function ReportExplorer({ initialData, kelas, santri }: { initial
           </select>
         </div>
         <div className="flex gap-2">
-          <button onClick={apply} className="flex-1 px-3 py-2 rounded bg-blue-600 text-white">{loading ? 'Memuat…' : 'Terapkan'}</button>
+          <button onClick={apply} className="flex-1 px-3 py-2 rounded bg-primary hover:bg-primaryDark text-white transition-colors">{loading ? 'Memuat…' : 'Terapkan'}</button>
           <a className="px-3 py-2 rounded border" href={`/api/export/presensi/pdf?${new URLSearchParams({ ...(from?{from}:{}), ...(to?{to}:{}), ...(kelasId?{kelasId}:{}), ...(santriId?{santriId}:{}), }).toString()}`}>Export PDF</a>
         </div>
       </div>
@@ -80,3 +80,4 @@ function defaultFrom() {
   const s = new Date(d.getTime() - d.getTimezoneOffset()*60000)
   return s.toISOString().slice(0,10)
 }
+

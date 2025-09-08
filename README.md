@@ -11,7 +11,7 @@ Website presensi RTQ dengan monitoring orang tua. Dibangun dengan Next.js 14 (Ap
 - Deployment: Vercel
 
 ## Fitur Utama (Ringkas)
-- Autentikasi 3 role: Admin, Ustadz/Ustadzah, Orang Tua
+- Autentikasi 3 role: Admin, Ustadz/Ustadzah, Orang Tua (Ustadz/Orang Tua login dengan username, Admin bisa username atau email)
 - Dashboard per role (admin/ustadz/orang tua)
 - Presensi: Hadir/Izin/Sakit/Alpa + timestamp + catatan + notifikasi
 - Monitoring Hafalan + evaluasi (endpoint dasar)
@@ -73,6 +73,16 @@ Buka `http://localhost:3000`.
 5) Membuat akun admin pertama
 - Gunakan Prisma Studio untuk insert user admin, atau buat endpoint seeding sederhana.
 - Kolom password harus berupa hash bcrypt. Lihat contoh hash di `prisma/seed.ts` atau gunakan `bcryptjs` untuk membuat hash.
+
+### Akun contoh (seeding)
+Jalankan:
+```
+npm run seed
+```
+Akan dibuat akun berikut (login menggunakan Email + Password):
+- Admin: admin@rtq.local / rumah123.
+- Ustadz: musyrif1@rtq.local / tahfizh2025
+- Ustadz: musyrif2@rtq.local / quran2025
 
 ## Deployment (Vercel)
 - Hubungkan repo ke Vercel

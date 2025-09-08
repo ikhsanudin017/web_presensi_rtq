@@ -60,7 +60,7 @@ export default function EditForm({ santri }: { santri: Santri }) {
       </div>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="flex gap-2">
-        <button disabled={loading} className="px-4 py-2 rounded bg-blue-600 text-white">{loading ? 'Menyimpan…' : 'Simpan'}</button>
+        <button disabled={loading} className="px-4 py-2 rounded bg-primary hover:bg-primaryDark text-white transition-colors">{loading ? 'Menyimpan…' : 'Simpan'}</button>
         <button type="button" disabled={loading} className="px-4 py-2 rounded border" onClick={()=>history.back()}>Batal</button>
         <button type="button" disabled={loading} onClick={del} className="ml-auto px-4 py-2 rounded bg-red-600 text-white">Hapus</button>
       </div>

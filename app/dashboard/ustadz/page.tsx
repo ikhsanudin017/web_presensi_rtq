@@ -8,6 +8,7 @@ export default function UstadzDashboard() {
         <h1 className="text-2xl font-semibold">Dashboard Ustadz/Ustadzah</h1>
         <div className="flex gap-3">
           <a href="/dashboard/ustadz/presensi" className="px-4 py-2 rounded bg-primary hover:bg-primaryDark text-white">Presensi Harian</a>
+          <a href="/dashboard/ustadz/santri/new" className="px-4 py-2 rounded bg-primary hover:bg-primaryDark text-white">Tambah Santri</a>
           <a href="/dashboard/admin/laporan" className="px-4 py-2 rounded border border-primary text-primary hover:bg-primary hover:text-white transition">Laporan</a>
         </div>
         <ul className="list-disc pl-5 space-y-1">
