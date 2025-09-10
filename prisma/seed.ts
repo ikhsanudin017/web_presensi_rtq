@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
+// Prefer direct (UNPOOLED) URL for seeding to avoid pool limits/timeouts
+const datasourceUrl = process.env.DATABASE_URL
+const prisma = new PrismaClient({ datasources: { db: { url: datasourceUrl } } })
 
 async function upsertUser(name: string, email: string, username: string, password: string, role: 'ADMIN'|'USTADZ'|'ORANG_TUA', phone?: string) {
   const hash = await bcrypt.hash(password, 10)
