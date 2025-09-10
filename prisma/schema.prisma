@@ -1,14 +1,144 @@
-// Prisma schema for Website Presensi RTQ
-// Database: PostgreSQL (Vercel Postgres)
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  password      String
+  role          Role
+  phone         String?      @db.VarChar(32)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  username      String       @unique
+  auditLogs     AuditLog[]
+  evaluasiInput Evaluasi[]   @relation("EvaluasiInputBy")
+  hafalanInput  Hafalan[]    @relation("HafalanInputBy")
+  kelasDibina   Kelas[]      @relation("KelasUstadz")
+  pesanDikirim  Komunikasi[] @relation("PesanDari")
+  pesanDiterima Komunikasi[] @relation("PesanKe")
+  notifications Notifikasi[]
+  presensiInput Presensi[]   @relation("PresensiInputBy")
+  santri        Santri[]     @relation("ParentChildren")
+}
+
+model Santri {
+  id           String       @id @default(cuid())
+  nama         String
+  nis          String       @unique
+  tanggalLahir DateTime?
+  alamat       String?
+  parentId     String?
+  kelasId      String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  evaluasi     Evaluasi[]
+  hafalan      Hafalan[]
+  komunikasi   Komunikasi[]
+  presensi     Presensi[]
+  kelas        Kelas?       @relation(fields: [kelasId], references: [id])
+  parent       User?        @relation("ParentChildren", fields: [parentId], references: [id])
+}
+
+model Kelas {
+  id        String   @id @default(cuid())
+  nama      String
+  deskripsi String?
+  ustadzId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ustadz    User?    @relation("KelasUstadz", fields: [ustadzId], references: [id])
+  santri    Santri[]
+}
+
+model Presensi {
+  id        String         @id @default(cuid())
+  santriId  String
+  tanggal   DateTime       @default(now())
+  status    PresensiStatus
+  catatan   String?
+  fotoUrl   String?
+  createdBy String?
+  createdAt DateTime       @default(now())
+  ustadz    User?          @relation("PresensiInputBy", fields: [createdBy], references: [id])
+  santri    Santri         @relation(fields: [santriId], references: [id])
+
+  @@index([santriId, tanggal])
+}
+
+model Hafalan {
+  id          String        @id @default(cuid())
+  santriId    String
+  surah       String
+  ayatMulai   Int?
+  ayatSelesai Int?
+  status      HafalanStatus @default(BARU)
+  targetBulan DateTime?
+  catatan     String?
+  updatedBy   String?
+  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime      @default(now())
+  santri      Santri        @relation(fields: [santriId], references: [id])
+  ustadz      User?         @relation("HafalanInputBy", fields: [updatedBy], references: [id])
+
+  @@index([santriId])
+}
+
+model Evaluasi {
+  id        String   @id @default(cuid())
+  santriId  String
+  tanggal   DateTime @default(now())
+  nilai     Int
+  catatan   String?
+  pengujiId String?
+  ustadz    User?    @relation("EvaluasiInputBy", fields: [pengujiId], references: [id])
+  santri    Santri   @relation(fields: [santriId], references: [id])
+}
+
+model Notifikasi {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
+
+  @@index([userId, read])
+}
+
+model Komunikasi {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  santriId   String?
+  message    String
+  createdAt  DateTime @default(now())
+  from       User     @relation("PesanDari", fields: [fromUserId], references: [id])
+  santri     Santri?  @relation(fields: [santriId], references: [id])
+  to         User     @relation("PesanKe", fields: [toUserId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
 }
 
 enum Role {
@@ -37,147 +167,4 @@ enum NotificationType {
   EVALUASI
   SYSTEM
   CHAT
-}
-
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  username  String   @unique
-  email     String   @unique
-  password  String
-  role      Role
-  phone     String?  @db.VarChar(32)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  santri        Santri[]        @relation("ParentChildren")
-  kelasDibina   Kelas[]         @relation("KelasUstadz")
-  presensiInput Presensi[]      @relation("PresensiInputBy")
-  hafalanInput  Hafalan[]       @relation("HafalanInputBy")
-  evaluasiInput Evaluasi[]      @relation("EvaluasiInputBy")
-  notifications Notifikasi[]
-  pesanDikirim  Komunikasi[]    @relation("PesanDari")
-  pesanDiterima Komunikasi[]    @relation("PesanKe")
-  auditLogs     AuditLog[]
-}
-
-model Santri {
-  id        String   @id @default(cuid())
-  nama      String
-  nis       String   @unique
-  tanggalLahir DateTime?
-  alamat    String?
-  parentId  String?
-  kelasId   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  parent User? @relation("ParentChildren", fields: [parentId], references: [id])
-  kelas  Kelas? @relation(fields: [kelasId], references: [id])
-  presensi Presensi[]
-  hafalan  Hafalan[]
-  evaluasi Evaluasi[]
-  komunikasi Komunikasi[]
-}
-
-model Kelas {
-  id        String   @id @default(cuid())
-  nama      String
-  deskripsi String?
-  ustadzId  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  ustadz User?   @relation("KelasUstadz", fields: [ustadzId], references: [id])
-  santri Santri[]
-}
-
-model Presensi {
-  id         String         @id @default(cuid())
-  santriId   String
-  tanggal    DateTime       @default(now())
-  status     PresensiStatus
-  catatan    String?
-  fotoUrl    String?
-  createdBy  String?
-  createdAt  DateTime       @default(now())
-
-  santri   Santri @relation(fields: [santriId], references: [id])
-  ustadz   User?  @relation("PresensiInputBy", fields: [createdBy], references: [id])
-
-  @@index([santriId, tanggal])
-}
-
-model Hafalan {
-  id          String        @id @default(cuid())
-  santriId    String
-  surah       String
-  ayatMulai   Int?
-  ayatSelesai Int?
-  status      HafalanStatus @default(BARU)
-  targetBulan DateTime?
-  catatan     String?
-  updatedBy   String?
-  updatedAt   DateTime      @updatedAt
-  createdAt   DateTime      @default(now())
-
-  santri Santri @relation(fields: [santriId], references: [id])
-  ustadz User?  @relation("HafalanInputBy", fields: [updatedBy], references: [id])
-
-  @@index([santriId])
-}
-
-model Evaluasi {
-  id        String   @id @default(cuid())
-  santriId  String
-  tanggal   DateTime @default(now())
-  nilai     Int
-  catatan   String?
-  pengujiId String?
-
-  santri Santri @relation(fields: [santriId], references: [id])
-  ustadz User?  @relation("EvaluasiInputBy", fields: [pengujiId], references: [id])
-}
-
-model Notifikasi {
-  id        String           @id @default(cuid())
-  userId    String
-  type      NotificationType
-  title     String
-  message   String
-  read      Boolean          @default(false)
-  createdAt DateTime         @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-  @@index([userId, read])
-}
-
-model Komunikasi {
-  id         String   @id @default(cuid())
-  fromUserId String
-  toUserId   String
-  santriId   String?
-  message    String
-  createdAt  DateTime @default(now())
-
-  from User   @relation("PesanDari", fields: [fromUserId], references: [id])
-  to   User   @relation("PesanKe", fields: [toUserId], references: [id])
-  santri Santri? @relation(fields: [santriId], references: [id])
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  action    String
-  entity    String?
-  entityId  String?
-  meta      Json?
-  ip        String?
-  createdAt DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id])
-  @@index([userId, createdAt])
 }

@@ -1,4 +1,4 @@
-# Presensi Rumah Tahfidz Quran (RTQ)
+# Presensi Rumah Tahfizh Quran (RTQ)
 
 Website presensi RTQ dengan monitoring orang tua. Dibangun dengan Next.js 14 (App Router), TypeScript, Tailwind CSS, Prisma, NextAuth.js, dan PostgreSQL (Vercel Postgres). Siap untuk deploy di Vercel.
 
@@ -11,11 +11,11 @@ Website presensi RTQ dengan monitoring orang tua. Dibangun dengan Next.js 14 (Ap
 - Deployment: Vercel
 
 ## Fitur Utama (Ringkas)
-- Autentikasi 3 role: Admin, Ustadz/Ustadzah, Orang Tua (Ustadz/Orang Tua login dengan username, Admin bisa username atau email)
-- Dashboard per role (admin/ustadz/orang tua)
+- Autentikasi 3 role: Admin, Pengajar, Orang Tua (Pengajar/Orang Tua login dengan username, Admin bisa username atau email)
+- Dashboard per role (admin/pengajar/orang tua)
 - Presensi: Hadir/Izin/Sakit/Alpa + timestamp + catatan + notifikasi
 - Monitoring Hafalan + evaluasi (endpoint dasar)
-- Komunikasi antar role (ustadz ↔ orang tua)
+- Komunikasi antar role (pengajar ↔ orang tua)
 - Notifikasi ketidakhadiran (DB + stub email/WA)
 - Export Presensi (CSV); siap extend ke PDF
 - Keamanan: Zod validation, auth middleware, rate limit (in-memory), audit log
@@ -30,7 +30,7 @@ Website presensi RTQ dengan monitoring orang tua. Dibangun dengan Next.js 14 (Ap
 ## Prisma Schema (Tabel)
 - users (role: ADMIN | USTADZ | ORANG_TUA)
 - santri (data anak; relasi parent dan kelas)
-- kelas (kelompok belajar; relasi ustadz)
+- kelas (kelompok belajar; relasi pengajar)
 - presensi (HADIR/IZIN/SAKIT/ALPA + timestamp)
 - hafalan (status BARU/PROSES/SELESAI/MURAJAAH + target bulanan)
 - evaluasi (nilai + catatan)
@@ -81,8 +81,9 @@ npm run seed
 ```
 Akan dibuat akun berikut (login menggunakan Email + Password):
 - Admin: admin@rtq.local / rumah123.
-- Ustadz: musyrif1@rtq.local / tahfizh2025
-- Ustadz: musyrif2@rtq.local / quran2025
+- Ustadz Yuliyanto: yuliyanto@rtq.local / rtq2025
+- Mbak Zulfaa: zulfaa@rtq.local / rtq2025
+- Mas Nofhendri: nofhendri@rtq.local / rtq2025
 
 ## Deployment (Vercel)
 - Hubungkan repo ke Vercel
@@ -125,7 +126,7 @@ Semua endpoint (kecuali auth) dilindungi oleh middleware NextAuth. Rate-limit se
 - Audit Log: tercatat pada aksi penting di API
 
 ## TODO yang bisa dikembangkan
-- UI CRUD lengkap untuk Santri, Ustadz, Orang Tua
+- UI CRUD lengkap untuk Santri, Pengajar, Orang Tua
 - Dashboard statistik (chart) menggunakan `chart.js`/`recharts`
 - Evaluasi endpoints dan halaman
 - Email/WhatsApp notif via `nodemailer` / provider WhatsApp API ketika var tersedia

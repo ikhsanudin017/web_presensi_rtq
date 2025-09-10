@@ -1,13 +1,48 @@
 "use client"
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-export default function EvaluasiForm({ santri }: { santri: { id: string; nama: string }[] }) {
-  const [santriId, setSantriId] = useState(santri[0]?.id || '')
+type Santri = { id: string; nama: string; kelasId?: string | null }
+type Kelas = { id: string; nama: string }
+
+export default function EvaluasiForm({ santri: initial } : { santri: { id: string; nama: string }[] }) {
+  const [kelas, setKelas] = useState<Kelas[]>([])
+  const [kelasId, setKelasId] = useState<string>('')
+  const [allSantri, setAllSantri] = useState<Santri[]>(() => initial as Santri[])
+  const [santriId, setSantriId] = useState<string>('')
   const [nilai, setNilai] = useState<number | ''>('')
   const [catatan, setCatatan] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [ok, setOk] = useState(false)
+
+  useEffect(() => { loadKelas(); loadSantri() }, [])
+  useEffect(() => { setSantriId('') }, [kelasId])
+
+  const santriOptions = useMemo(() => {
+    const list = allSantri
+      .filter(s => !kelasId || s.kelasId === kelasId)
+      .sort((a,b) => a.nama.localeCompare(b.nama))
+    return list
+  }, [allSantri, kelasId])
+
+  async function loadKelas() {
+    try {
+      const res = await fetch('/api/kelas')
+      if (res.ok) {
+        const json = await res.json()
+        setKelas(json.kelas as Kelas[])
+      }
+    } catch {}
+  }
+  async function loadSantri() {
+    try {
+      const res = await fetch('/api/santri')
+      if (res.ok) {
+        const json = await res.json()
+        setAllSantri(json.santri as Santri[])
+      }
+    } catch {}
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,11 +62,19 @@ export default function EvaluasiForm({ santri }: { santri: { id: string; nama: s
 
   return (
     <form onSubmit={submit} className="space-y-4 border rounded p-4">
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-4 gap-4 items-end">
+        <div>
+          <label className="block text-sm mb-1">Kelas</label>
+          <select className="w-full border rounded px-3 py-2 bg-transparent" value={kelasId} onChange={e=>setKelasId(e.target.value)}>
+            <option value="">Semua</option>
+            {kelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
+          </select>
+        </div>
         <div>
           <label className="block text-sm mb-1">Santri</label>
-          <select className="w-full border rounded px-3 py-2 bg-transparent" value={santriId} onChange={e=>setSantriId(e.target.value)}>
-            {santri.map(s => <option key={s.id} value={s.id}>{s.nama}</option>)}
+          <select className="w-full border rounded px-3 py-2 bg-transparent" value={santriId} onChange={e=>setSantriId(e.target.value)} required>
+            <option value="">Pilih santri</option>
+            {santriOptions.map(s => <option key={s.id} value={s.id}>{s.nama}</option>)}
           </select>
         </div>
         <div>
@@ -49,4 +92,3 @@ export default function EvaluasiForm({ santri }: { santri: { id: string; nama: s
     </form>
   )
 }
-

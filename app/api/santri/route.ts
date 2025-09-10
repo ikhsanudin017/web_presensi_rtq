@@ -9,10 +9,12 @@ export async function GET() {
   try {
     const session = await requireAuth()
     const role = (session.user as any).role
+    const userId = (session.user as any).id
     if (role === 'ORANG_TUA') {
-      const santri = await prisma.santri.findMany({ where: { parentId: (session.user as any).id }, orderBy: { nama: 'asc' } })
+      const santri = await prisma.santri.findMany({ where: { parentId: userId }, orderBy: { nama: 'asc' } })
       return NextResponse.json({ santri })
     }
+    // USTADZ/ADMIN: semua santri agar filter kelas bisa menampilkan Iqra & Tahfizh
     const santri = await prisma.santri.findMany({ orderBy: { nama: 'asc' } })
     return NextResponse.json({ santri })
   } catch (e: any) {

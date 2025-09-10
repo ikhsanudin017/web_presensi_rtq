@@ -11,7 +11,11 @@ export const userCreateSchema = z.object({
 
 export const santriCreateSchema = z.object({
   nama: z.string().min(2),
-  nis: z.string().min(3),
+  // NIS: izinkan minimal 1 digit, wajib angka
+  nis: z
+    .string()
+    .min(1, 'NIS minimal 1 digit')
+    .regex(/^\d+$/, 'NIS harus berupa angka'),
   tanggalLahir: z.string().optional(),
   alamat: z.string().optional(),
   parentId: z.string().cuid().optional(),

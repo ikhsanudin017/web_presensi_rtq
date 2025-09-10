@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Presensi RTQ',
-  description: 'Website Presensi Rumah Tahfidz Quran dengan Monitoring Orang Tua',
+  description: 'Website Presensi Rumah Tahfizh Quran dengan Monitoring Orang Tua',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -24,4 +24,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   )
 }
-

@@ -37,7 +37,16 @@ export default function NewSantriPage() {
           </div>
           <div>
             <label className="block text-sm">NIS</label>
-            <input className="w-full border rounded px-3 py-2 bg-transparent" value={form.nis} onChange={e=>setForm(f=>({...f, nis:e.target.value}))} required />
+            <input
+              className="w-full border rounded px-3 py-2 bg-transparent"
+              value={form.nis}
+              onChange={e=>setForm(f=>({...f, nis:e.target.value}))}
+              inputMode="numeric"
+              pattern="\d+"
+              title="NIS harus berupa angka"
+              minLength={1}
+              required
+            />
           </div>
           <div>
             <label className="block text-sm">Tanggal Lahir</label>

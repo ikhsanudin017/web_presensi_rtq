@@ -3,10 +3,12 @@ import Nav from '@/components/nav'
 import { useEffect, useMemo, useState } from 'react'
 
 type Santri = { id: string; nama: string; kelasId: string | null }
+type Kelas = { id: string; nama: string }
 type Presensi = { id: string; santriId: string; tanggal: string; status: 'HADIR'|'IZIN'|'SAKIT'|'ALPA'; catatan?: string|null }
 
 export default function PresensiPage() {
   const [santri, setSantri] = useState<Santri[]>([])
+  const [kelas, setKelas] = useState<Kelas[]>([])
   const [kelasId, setKelasId] = useState<string>('')
   const [santriId, setSantriId] = useState<string>('')
   const [status, setStatus] = useState<'HADIR'|'IZIN'|'SAKIT'|'ALPA'>('HADIR')
@@ -15,12 +17,9 @@ export default function PresensiPage() {
   const [error, setError] = useState<string | null>(null)
   const [recent, setRecent] = useState<Presensi[]>([])
 
-  useEffect(() => { loadSantri(); loadRecent() }, [])
+  useEffect(() => { loadSantri(); loadKelas(); loadRecent() }, [])
 
-  const kelasOptions = useMemo(() => {
-    const ids = new Set(santri.map(s => s.kelasId).filter(Boolean) as string[])
-    return Array.from(ids)
-  }, [santri])
+  const kelasOptions = useMemo(() => kelas, [kelas])
 
   const santriOptions = useMemo(() => santri.filter(s => !kelasId || s.kelasId === kelasId), [santri, kelasId])
 
@@ -32,6 +31,14 @@ export default function PresensiPage() {
     if (!res.ok) { setError((await res.json()).error || 'Gagal memuat santri'); return }
     const json = await res.json()
     setSantri(json.santri as Santri[])
+  }
+
+  async function loadKelas() {
+    setError(null)
+    const res = await fetch('/api/kelas')
+    if (!res.ok) { setKelas([]); return }
+    const json = await res.json()
+    setKelas(json.kelas as Kelas[])
   }
 
   async function loadRecent() {
@@ -76,7 +83,7 @@ export default function PresensiPage() {
               <label className="block text-sm mb-1">Kelas</label>
               <select className="w-full border rounded px-3 py-2 bg-transparent" value={kelasId} onChange={e=>setKelasId(e.target.value)}>
                 <option value="">Semua</option>
-                {kelasOptions.map(id => <option key={id} value={id}>Kelas {id.slice(0,6)}</option>)}
+                {kelasOptions.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
               </select>
             </div>
             <div>

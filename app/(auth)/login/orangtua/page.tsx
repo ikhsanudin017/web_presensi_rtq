@@ -1,14 +1,15 @@
 "use client"
 import { signIn } from 'next-auth/react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function LoginOrtuPage() {
+function LoginOrtuForm() {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const sp = useSearchParams()
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -16,7 +17,18 @@ export default function LoginOrtuPage() {
     setError(null)
     const res = await signIn('credentials', { redirect: false, identifier, password, role: 'ORANG_TUA' })
     setLoading(false)
-    if (res?.ok) router.push('/dashboard')
+    if (res?.ok) {
+      const cb = sp.get('callbackUrl') || ''
+      let to = '/dashboard'
+      if (cb) {
+        try {
+          to = new URL(cb).pathname || to
+        } catch {
+          to = cb.startsWith('/') ? cb : to
+        }
+      }
+      router.push(to)
+    }
     else setError('Gunakan NIS/Username/Email orang tua + password')
   }
 
@@ -36,9 +48,14 @@ export default function LoginOrtuPage() {
         <button disabled={loading} className="w-full bg-primary hover:bg-primaryDark text-white rounded py-2 transition-colors">
           {loading ? 'Memproses…' : 'Masuk'}
         </button>
-        <p className="text-xs mt-2 text-center opacity-70"><a className="hover:underline" href="/login">Pilih jenis login lain</a></p>
+        <p className="text-xs mt-2 text-center opacity-70"><a className="hover:underline" href="/login/ustadz">Masuk sebagai Ustadz</a></p>
       </form>
     </main>
   )
 }
+
+export default function LoginOrtuPage() {
+  return <Suspense><LoginOrtuForm /></Suspense>
+}
+
 
