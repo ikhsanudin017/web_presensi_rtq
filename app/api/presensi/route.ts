@@ -10,13 +10,17 @@ export async function GET(req: Request) {
     const session = await requireAuth()
     const { searchParams } = new URL(req.url)
     const santriId = searchParams.get('santriId') || undefined
+    const role = (session.user as any).role as 'ADMIN'|'USTADZ'|'ORANG_TUA'
+    const userId = (session.user as any).id as string
     const where: any = {}
     if (santriId) where.santriId = santriId
-    if ((session.user as any).role === 'ORANG_TUA') {
-      // filter to own children
-      const children = await prisma.santri.findMany({ where: { parentId: (session.user as any).id }, select: { id: true } })
+
+    if (role === 'ORANG_TUA') {
+      // Orang tua: hanya anak sendiri
+      const children = await prisma.santri.findMany({ where: { parentId: userId }, select: { id: true } })
       where.santriId = { in: children.map(c => c.id) }
     }
+
     const data = await prisma.presensi.findMany({ where, orderBy: { tanggal: 'desc' } })
     return NextResponse.json({ data })
   } catch (e: any) {

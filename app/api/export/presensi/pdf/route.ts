@@ -19,7 +19,8 @@ function endOfDay(d: Date) { const x = new Date(d); x.setHours(23,59,59,999); re
 export async function GET(req: Request) {
   try {
     const session = await requireAuth()
-    assertRole(session, ['ADMIN'])
+    // Izinkan ADMIN dan USTADZ
+    assertRole(session, ['ADMIN', 'USTADZ'])
     const { searchParams } = new URL(req.url)
     const from = parseDate(searchParams.get('from'))
     const to = parseDate(searchParams.get('to'))
@@ -52,6 +53,21 @@ export async function GET(req: Request) {
       orderBy: { tanggal: 'desc' }
     })
 
+    // Evaluasi dalam range/filter yang sama
+    const evalWhere: any = { tanggal: { gte, lte } }
+    if (santriId) evalWhere.santriId = santriId
+    if (ids) evalWhere.santriId = { in: ids }
+    const evals = await prisma.evaluasi.findMany({
+      where: evalWhere,
+      select: {
+        tanggal: true,
+        nilai: true,
+        catatan: true,
+        santri: { select: { nama: true } },
+      },
+      orderBy: { tanggal: 'desc' },
+    })
+
     // Resolve human-readable names for filters
     let kelasNama: string | null = null
     let santriNama: string | null = null
@@ -64,9 +80,13 @@ export async function GET(req: Request) {
       santriNama = s?.nama ?? santriId
     }
 
-    // @ts-ignore - runtime import for pdfkit
-    const PDFDocument = (await import('pdfkit')).default || (await import('pdfkit'))
+    // Gunakan versi standalone agar bundler Next menyertakan data font standar (hindari ENOENT Helvetica.afm)
+    // @ts-ignore
+    const PDFMod = await import('pdfkit/js/pdfkit.standalone.js')
+    const PDFDocument: any = (PDFMod as any).default || (PDFMod as any)
     const doc = new PDFDocument({ size: 'A4', margin: 40 }) as any
+    // Pakai font standar supaya konsisten
+    try { doc.font('Times-Roman') } catch {}
 
     const buffers: Buffer[] = []
     doc.on('data', (b: Buffer) => buffers.push(b))
@@ -130,7 +150,23 @@ export async function GET(req: Request) {
     let pageNo = 1
     let y = drawHeader(pageNo)
     const col = (x: number) => m.left + x
-    // Table header
+    // Ringkasan Presensi (badge)
+    const totalH = rows.filter(r => r.status === 'HADIR').length
+    const totalI = rows.filter(r => r.status === 'IZIN').length
+    const totalS = rows.filter(r => r.status === 'SAKIT').length
+    const totalA = rows.filter(r => r.status === 'ALPA').length
+    doc.fontSize(10).fillColor('#222')
+    const badge = (label: string, value: number, color: string, x: number) => {
+      const text = `${label}: ${value}`
+      doc.roundedRect(col(x), y, 88, 22, 6).fillOpacity(0.12).fill(color).fillOpacity(1)
+      doc.fillColor('#000').text(text, col(x)+8, y+6)
+    }
+    badge('Hadir', totalH, '#16a34a', 0)
+    badge('Izin', totalI, '#f59e0b', 96)
+    badge('Sakit', totalS, '#fb923c', 192)
+    badge('Alpa', totalA, '#ef4444', 288)
+    y += 32
+    // Header Tabel Presensi
     doc.fontSize(10).fillColor('#000')
     doc.text('Tanggal', col(0), y)
     doc.text('Santri', col(110), y)
@@ -171,6 +207,31 @@ export async function GET(req: Request) {
       doc.text(santriNamaRow, col(110), y, { width: 180 })
       doc.text(status, col(300), y, { width: 60 })
       doc.text(cat, col(370), y, { width: innerWidth - 370 })
+      y += lineHeight
+    }
+
+    // Spacer sebelum Evaluasi
+    if (y > maxY - 60) { drawFooter(pageNo); doc.addPage(); pageNo += 1; y = drawHeader(pageNo) }
+    y += 8
+    doc.fontSize(12).text('Evaluasi', col(0), y)
+    y += 16
+    doc.fontSize(10)
+    doc.text('Tanggal', col(0), y)
+    doc.text('Santri', col(110), y)
+    doc.text('Nilai', col(300), y)
+    doc.text('Catatan', col(370), y)
+    y += 16
+    doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#888').stroke(); y += 6
+
+    for (const e of evals) {
+      if (y > maxY) { drawFooter(pageNo); doc.addPage(); pageNo += 1; y = drawHeader(pageNo); doc.fontSize(10); doc.text('Tanggal', col(0), y); doc.text('Santri', col(110), y); doc.text('Nilai', col(300), y); doc.text('Catatan', col(370), y); y += 16; doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#888').stroke(); y += 6 }
+      const tanggal = new Date(e.tanggal).toLocaleDateString('id-ID')
+      const sn = (e as any).santri?.nama ?? '-'
+      doc.fillColor('#000').fontSize(10)
+      doc.text(tanggal, col(0), y, { width: 100 })
+      doc.text(sn, col(110), y, { width: 180 })
+      doc.text(String(e.nilai), col(300), y, { width: 60 })
+      doc.text(e.catatan ?? '', col(370), y, { width: innerWidth - 370 })
       y += lineHeight
     }
 

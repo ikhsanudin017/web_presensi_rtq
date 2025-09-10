@@ -16,6 +16,11 @@ export default function PresensiPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [recent, setRecent] = useState<Presensi[]>([])
+  const [fromDate, setFromDate] = useState<string>('')
+  const [toDate, setToDate] = useState<string>('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editStatus, setEditStatus] = useState<'HADIR'|'IZIN'|'SAKIT'|'ALPA'>('HADIR')
+  const [editCatatan, setEditCatatan] = useState<string>('')
 
   useEffect(() => { loadSantri(); loadKelas(); loadRecent() }, [])
 
@@ -49,6 +54,42 @@ export default function PresensiPage() {
     setRecent((json.data as Presensi[]).slice(0, 20))
   }
 
+  function startEdit(row: Presensi) {
+    setEditingId(row.id)
+    setEditStatus(row.status)
+    setEditCatatan(row.catatan ?? '')
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditStatus('HADIR')
+    setEditCatatan('')
+  }
+
+  async function saveEdit(id: string) {
+    setSubmitting(true)
+    setError(null)
+    const res = await fetch(`/api/presensi/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: editStatus, catatan: editCatatan || undefined })
+    })
+    setSubmitting(false)
+    if (!res.ok) { setError((await res.json()).error || 'Gagal menyimpan perubahan'); return }
+    setEditingId(null)
+    await loadRecent()
+  }
+
+  async function deleteRow(id: string) {
+    if (!confirm('Hapus presensi ini?')) return
+    setSubmitting(true)
+    setError(null)
+    const res = await fetch(`/api/presensi/${id}`, { method: 'DELETE' })
+    setSubmitting(false)
+    if (!res.ok) { setError((await res.json()).error || 'Gagal menghapus'); return }
+    await loadRecent()
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!santriId) { setError('Pilih santri terlebih dahulu'); return }
@@ -67,6 +108,17 @@ export default function PresensiPage() {
   }
 
   const nameById = useMemo(() => Object.fromEntries(santri.map(s => [s.id, s.nama] as const)), [santri])
+
+  function buildExportUrl(kind: 'csv'|'pdf') {
+    const params = new URLSearchParams()
+    if (fromDate) params.set('from', fromDate)
+    if (toDate) params.set('to', toDate)
+    if (santriId) params.set('santriId', santriId)
+    else if (kelasId) params.set('kelasId', kelasId)
+    const base = kind === 'csv' ? '/api/export/presensi' : '/api/export/presensi/pdf'
+    const qs = params.toString()
+    return qs ? `${base}?${qs}` : base
+  }
 
   return (
     <div className="min-h-screen">
@@ -117,6 +169,20 @@ export default function PresensiPage() {
 
         <section className="space-y-2">
           <h2 className="font-medium">Riwayat Terbaru</h2>
+          <div className="flex flex-wrap items-end gap-3 mb-2">
+            <div>
+              <label className="block text-xs mb-1">Dari Tanggal</label>
+              <input type="date" className="border rounded px-2 py-1 bg-transparent" value={fromDate} onChange={e=>setFromDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-xs mb-1">Sampai Tanggal</label>
+              <input type="date" className="border rounded px-2 py-1 bg-transparent" value={toDate} onChange={e=>setToDate(e.target.value)} />
+            </div>
+            <div className="flex gap-2 ml-auto">
+              <a href={buildExportUrl('csv')} className="px-3 py-1.5 rounded border text-sm hover:bg-gray-50 dark:hover:bg-gray-800" target="_blank" rel="noopener noreferrer">Export CSV</a>
+              <a href={buildExportUrl('pdf')} className="px-3 py-1.5 rounded border text-sm hover:bg-gray-50 dark:hover:bg-gray-800" target="_blank" rel="noopener noreferrer">Export PDF</a>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full border text-sm">
               <thead className="bg-gray-50 dark:bg-gray-800">
@@ -125,6 +191,7 @@ export default function PresensiPage() {
                   <th className="text-left p-2 border">Santri</th>
                   <th className="text-left p-2 border">Status</th>
                   <th className="text-left p-2 border">Catatan</th>
+                  <th className="text-left p-2 border w-[160px]">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -133,14 +200,42 @@ export default function PresensiPage() {
                     <td className="p-2 border">{new Date(r.tanggal).toLocaleString()}</td>
                     <td className="p-2 border">{nameById[r.santriId] || r.santriId}</td>
                     <td className="p-2 border">
-                      <span className={badgeColor(r.status)}>{r.status}</span>
+                      {editingId === r.id ? (
+                        <select className="border rounded px-2 py-1 bg-transparent" value={editStatus} onChange={e=>setEditStatus(e.target.value as any)}>
+                          <option value="HADIR">HADIR</option>
+                          <option value="IZIN">IZIN</option>
+                          <option value="SAKIT">SAKIT</option>
+                          <option value="ALPA">ALPA</option>
+                        </select>
+                      ) : (
+                        <span className={badgeColor(r.status)}>{r.status}</span>
+                      )}
                     </td>
-                    <td className="p-2 border">{r.catatan ?? '-'}</td>
+                    <td className="p-2 border">
+                      {editingId === r.id ? (
+                        <input className="w-full border rounded px-2 py-1 bg-transparent" value={editCatatan} onChange={e=>setEditCatatan(e.target.value)} placeholder="Catatan" />
+                      ) : (
+                        r.catatan ?? '-'
+                      )}
+                    </td>
+                    <td className="p-2 border">
+                      {editingId === r.id ? (
+                        <div className="flex gap-2">
+                          <button disabled={submitting} onClick={()=>saveEdit(r.id)} className="px-3 py-1 rounded bg-primary text-white text-xs">Simpan</button>
+                          <button disabled={submitting} onClick={cancelEdit} className="px-3 py-1 rounded border text-xs">Batal</button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button disabled={submitting} onClick={()=>startEdit(r)} className="px-3 py-1 rounded border text-xs">Edit</button>
+                          <button disabled={submitting} onClick={()=>deleteRow(r.id)} className="px-3 py-1 rounded border text-xs text-red-600">Hapus</button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {recent.length === 0 && (
                   <tr>
-                    <td className="p-3 text-center opacity-70" colSpan={4}>Belum ada data</td>
+                    <td className="p-3 text-center opacity-70" colSpan={5}>Belum ada data</td>
                   </tr>
                 )}
               </tbody>

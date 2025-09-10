@@ -21,6 +21,12 @@ body {
   color: rgb(var(--fg));
 }
 
+/* Arabic-inspired heading font (El Messiri) */
+h1, h2, .heading-arabic {
+  font-family: var(--font-el-messiri), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+  letter-spacing: .2px;
+}
+
 /* Aurora background and card effects */
 @keyframes auroraMove {
   0% { background-position: 0% 50%, 100% 50%, 50% 100%; }
@@ -63,9 +69,38 @@ body {
   background-repeat: no-repeat;
 }
 
+/* Softer, cleaner hero tint */
+.soft-hero {
+  background-image:
+    radial-gradient(1000px 600px at 10% 0%, rgba(14,165,233,0.10), transparent 60%),
+    radial-gradient(900px 540px at 90% 0%, rgba(99,102,241,0.10), transparent 60%);
+}
+
 .dot-grid {
   background-image: radial-gradient(rgba(2,132,199,0.18) 1px, transparent 1px);
   background-size: 20px 20px;
   -webkit-mask-image: radial-gradient(ellipse at center, black 70%, transparent 100%);
           mask-image: radial-gradient(ellipse at center, black 70%, transparent 100%);
+}
+
+/* Subtle rotation on ornaments */
+@keyframes starFloat {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(2deg) scale(1.02); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.star-anim { animation: starFloat 12s ease-in-out infinite; }
+
+/* Arabic typography tweaks */
+.arabic-text {
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+  letter-spacing: .2px;
+}
+
+/* Mosaic band & patterns */
+.mosaic-band {
+  background-image: repeating-conic-gradient(from 45deg, rgba(14,165,233,.45) 0 10deg, rgba(99,102,241,.45) 10deg 20deg);
+  -webkit-mask-image: radial-gradient(120% 120% at 50% 50%, black 60%, transparent 100%);
+          mask-image: radial-gradient(120% 120% at 50% 50%, black 60%, transparent 100%);
+  opacity: .65;
 }
