@@ -21,7 +21,7 @@ export default async function UstadzDashboard() {
   if (!user || user.role !== 'USTADZ') {
     // Keep it simple: let middleware handle redirect, or show minimal guard
     return (
-      <div className="p-8 text-center text-gray-600">Akses hanya untuk Ustadz/Ustadzah.</div>
+      <div className="p-8 text-center text-gray-600">Akses hanya untuk Pengajar.</div>
     )
   }
 
@@ -71,6 +71,14 @@ export default async function UstadzDashboard() {
       ;(days[idx] as any)[key]++
     }
   }
+
+  const totals7 = days.reduce((acc, d) => {
+    acc.hadir += d.hadir
+    acc.izin += d.izin
+    acc.sakit += d.sakit
+    acc.alpa += d.alpa
+    return acc
+  }, { hadir: 0, izin: 0, sakit: 0, alpa: 0 })
 
   // Build 30-day dataset for report style chart
   const buckets = new Map<string, { HADIR: number; IZIN: number; SAKIT: number; ALPA: number }>()
@@ -145,6 +153,14 @@ export default async function UstadzDashboard() {
               ))}
             </ul>
           </div>
+        </section>
+
+        {/* Ringkasan 7 Hari Terakhir */}
+        <section className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <StatCard title="Hadir 7 Hari" value={totals7.hadir} />
+          <StatCard title="Izin 7 Hari" value={totals7.izin} />
+          <StatCard title="Sakit 7 Hari" value={totals7.sakit} />
+          <StatCard title="Alpa 7 Hari" value={totals7.alpa} />
         </section>
 
         {/* Quick actions */}

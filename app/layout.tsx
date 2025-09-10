@@ -9,6 +9,11 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Presensi RTQ',
   description: 'Website Presensi Rumah Tahfizh Quran dengan Monitoring Orang Tua',
+  icons: {
+    icon: '/rtq-logo.png',
+    shortcut: '/rtq-logo.png',
+    apple: '/rtq-logo.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
