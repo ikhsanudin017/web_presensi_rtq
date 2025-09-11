@@ -21,19 +21,24 @@ function LoginUstadzForm() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const res = await signIn('credentials', { redirect: false, identifier, password, role: 'USTADZ' })
+    // Build target URL first to let NextAuth craft proper callback
+    const cb = sp.get('callbackUrl') || ''
+    let to = '/dashboard'
+    if (cb) {
+      try { to = new URL(cb).pathname || to } catch { to = cb.startsWith('/') ? cb : to }
+    }
+    const res = await signIn('credentials', {
+      redirect: false,
+      callbackUrl: to,
+      identifier,
+      password,
+      role: 'USTADZ'
+    })
     setLoading(false)
     if (res?.ok) {
-      const cb = sp.get('callbackUrl') || ''
-      let to = '/dashboard'
-      if (cb) {
-        try {
-          to = new URL(cb).pathname || to
-        } catch {
-          to = cb.startsWith('/') ? cb : to
-        }
-      }
-      router.push(to)
+      // Perform a full navigation to guarantee fresh session everywhere
+      const url = res.url || to
+      if (typeof window !== 'undefined') window.location.href = url
     }
     else setError('Username/Email atau password salah')
   }
@@ -74,5 +79,3 @@ function LoginUstadzForm() {
 export default function LoginUstadzPage() {
   return <Suspense><LoginUstadzForm /></Suspense>
 }
-
-

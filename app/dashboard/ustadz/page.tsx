@@ -15,6 +15,8 @@ function endOfDay(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function UstadzDashboard() {
   const session = await getServerSession(authOptions)
   const user = session?.user as any
@@ -35,8 +37,8 @@ export default async function UstadzDashboard() {
   from30.setDate(now.getDate() - 29)
   from30.setHours(0,0,0,0)
 
-  // Jalankan query secara berurutan untuk mengurangi penggunaan koneksi simultan
-  const totalSantri = await prisma.santri.count({ where: { kelas: { ustadzId: user.id } } })
+  // Total santri global (tidak dibatasi pengajar)
+  const totalSantri = await prisma.santri.count()
   const todayHadir = await prisma.presensi.count({ where: { createdBy: user.id, tanggal: { gte: sod, lt: eod }, status: 'HADIR' } })
   const hafalanMingguIni = await prisma.hafalan.count({ where: { updatedBy: user.id, updatedAt: { gte: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000) } } })
   const unreadNotif = await prisma.notifikasi.count({ where: { userId: user.id, read: false } })
@@ -82,25 +84,37 @@ export default async function UstadzDashboard() {
 
   // Build 30-day dataset for report style chart
   const buckets = new Map<string, { HADIR: number; IZIN: number; SAKIT: number; ALPA: number }>()
+  const keyOf = (d: Date) => {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}` // local date key to avoid UTC shift
+  }
   const cursor = new Date(from30)
   const end = new Date(now)
   while (cursor <= end) {
-    const key = cursor.toISOString().slice(0,10)
+    const key = keyOf(cursor)
     buckets.set(key, { HADIR: 0, IZIN: 0, SAKIT: 0, ALPA: 0 })
     cursor.setDate(cursor.getDate()+1)
   }
   for (const r of records30) {
-    const key = new Date(r.tanggal).toISOString().slice(0,10)
+    const dt = new Date(r.tanggal)
+    const key = keyOf(dt)
     const row = buckets.get(key)
     if (!row) continue
     ;(row as any)[r.status]++
   }
-  const data30: AttendanceDataPoint[] = Array.from(buckets.entries()).map(([date, v]) => ({ date, ...v }))
+  const formatShort = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short' })
+  const data30: AttendanceDataPoint[] = Array.from(buckets.entries()).map(([key, v]) => {
+    const [yy, mm, dd] = key.split('-').map(Number)
+    const d = new Date(yy, (mm || 1) - 1, dd || 1)
+    return { date: formatShort.format(d), ...v }
+  })
 
   return (
     <div className="min-h-screen">
       <Nav />
-      <main className="p-6 max-w-7xl mx-auto space-y-6">
+      <main className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
         {/* Hero */}
         <section className="rounded-2xl bg-gradient-to-r from-primary to-primaryDark text-white p-6 shadow">
           <div className="flex items-center justify-between flex-wrap gap-4">

@@ -15,19 +15,22 @@ function LoginOrtuForm() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const res = await signIn('credentials', { redirect: false, identifier, password, role: 'ORANG_TUA' })
+    const cb = sp.get('callbackUrl') || ''
+    let to = '/dashboard'
+    if (cb) {
+      try { to = new URL(cb).pathname || to } catch { to = cb.startsWith('/') ? cb : to }
+    }
+    const res = await signIn('credentials', {
+      redirect: false,
+      callbackUrl: to,
+      identifier,
+      password,
+      role: 'ORANG_TUA'
+    })
     setLoading(false)
     if (res?.ok) {
-      const cb = sp.get('callbackUrl') || ''
-      let to = '/dashboard'
-      if (cb) {
-        try {
-          to = new URL(cb).pathname || to
-        } catch {
-          to = cb.startsWith('/') ? cb : to
-        }
-      }
-      router.push(to)
+      const url = res.url || to
+      if (typeof window !== 'undefined') window.location.href = url
     }
     else setError('Gunakan NIS/Username/Email orang tua + password')
   }
@@ -57,5 +60,3 @@ function LoginOrtuForm() {
 export default function LoginOrtuPage() {
   return <Suspense><LoginOrtuForm /></Suspense>
 }
-
-

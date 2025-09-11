@@ -14,7 +14,7 @@ export default function AttendanceChart({ data, mode = 'percent' }: { data: Atte
   const formatY = (v: number) => (mode === 'percent' ? `${Math.round(Number(v) * 100)}%` : String(v))
   const tooltipFormatter = (value: any) => (mode === 'percent' ? `${Math.round(Number(value) * 100)}%` : value)
   return (
-    <div className="w-full h-[320px]">
+    <div className="w-full h-[260px] md:h-[320px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} stackOffset={stackOffset as any}>
           <CartesianGrid strokeDasharray="3 3" />
