@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 type Item = { id: string; tanggal: string | Date; nilai: number; catatan: string; santriNama: string; pengujiNama: string }
 
@@ -7,6 +7,20 @@ export default function EvaluasiRecent({ items: initial }: { items: Item[] }) {
   const [items, setItems] = useState<Item[]>(() => initial)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
+
+  const grouped = useMemo(() => {
+    const labelFmt = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })
+    const keyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+    const map = new Map<string, { label: string; items: Item[] }>()
+    for (const it of items) {
+      const d = new Date(it.tanggal)
+      const key = keyOf(d)
+      const label = labelFmt.format(d)
+      if (!map.has(key)) map.set(key, { label, items: [] })
+      map.get(key)!.items.push(it)
+    }
+    return Array.from(map.entries()).map(([key, v]) => ({ key, label: v.label, items: v.items }))
+  }, [items])
 
   async function onDelete(id: string) {
     if (!confirm('Hapus evaluasi ini?')) return
@@ -34,7 +48,12 @@ export default function EvaluasiRecent({ items: initial }: { items: Item[] }) {
         </tr>
       </thead>
       <tbody>
-        {items.map(ev => {
+        {grouped.map(g => (
+          <>
+            <tr key={`h-${g.key}`} className="border-t bg-gray-50 dark:bg-gray-800/50">
+              <td className="px-3 py-2 font-medium" colSpan={5}>{g.label}</td>
+            </tr>
+            {g.items.map(ev => {
           const d = new Date(ev.tanggal)
           const detailOpen = openId === ev.id
           return (
@@ -67,6 +86,8 @@ export default function EvaluasiRecent({ items: initial }: { items: Item[] }) {
             </>
           )
         })}
+          </>
+        ))}
         {items.length === 0 && (
           <tr><td className="px-3 py-3 text-center opacity-70" colSpan={5}>Belum ada data</td></tr>
         )}
@@ -74,4 +95,3 @@ export default function EvaluasiRecent({ items: initial }: { items: Item[] }) {
     </table>
   )
 }
-

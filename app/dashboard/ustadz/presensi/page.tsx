@@ -120,6 +120,28 @@ export default function PresensiPage() {
     return qs ? `${base}?${qs}` : base
   }
 
+  // Group recent by day for display
+  const groupedRecent = useMemo(() => {
+    const by: { key: string; label: string; items: Presensi[] }[] = []
+    const map = new Map<string, { label: string; items: Presensi[] }>()
+    const labelFmt = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })
+    const keyOf = (d: Date) => {
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+    for (const r of recent) {
+      const d = new Date(r.tanggal)
+      const key = keyOf(d)
+      const label = labelFmt.format(d)
+      if (!map.has(key)) map.set(key, { label, items: [] })
+      map.get(key)!.items.push(r)
+    }
+    for (const [key, v] of map.entries()) by.push({ key, label: v.label, items: v.items })
+    return by
+  }, [recent])
+
   return (
     <div className="min-h-screen">
       <Nav />
@@ -195,43 +217,50 @@ export default function PresensiPage() {
                 </tr>
               </thead>
               <tbody>
-                {recent.map(r => (
-                  <tr key={r.id} className="border-t">
-                    <td className="p-2 border">{new Date(r.tanggal).toLocaleString()}</td>
-                    <td className="p-2 border">{nameById[r.santriId] || r.santriId}</td>
-                    <td className="p-2 border">
-                      {editingId === r.id ? (
-                        <select className="border rounded px-2 py-1 bg-transparent" value={editStatus} onChange={e=>setEditStatus(e.target.value as any)}>
-                          <option value="HADIR">HADIR</option>
-                          <option value="IZIN">IZIN</option>
-                          <option value="SAKIT">SAKIT</option>
-                          <option value="ALPA">ALPA</option>
-                        </select>
-                      ) : (
-                        <span className={badgeColor(r.status)}>{r.status}</span>
-                      )}
-                    </td>
-                    <td className="p-2 border">
-                      {editingId === r.id ? (
-                        <input className="w-full border rounded px-2 py-1 bg-transparent" value={editCatatan} onChange={e=>setEditCatatan(e.target.value)} placeholder="Catatan" />
-                      ) : (
-                        r.catatan ?? '-'
-                      )}
-                    </td>
-                    <td className="p-2 border">
-                      {editingId === r.id ? (
-                        <div className="flex gap-2">
-                          <button disabled={submitting} onClick={()=>saveEdit(r.id)} className="px-3 py-1 rounded bg-primary text-white text-xs">Simpan</button>
-                          <button disabled={submitting} onClick={cancelEdit} className="px-3 py-1 rounded border text-xs">Batal</button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2">
-                          <button disabled={submitting} onClick={()=>startEdit(r)} className="px-3 py-1 rounded border text-xs">Edit</button>
-                          <button disabled={submitting} onClick={()=>deleteRow(r.id)} className="px-3 py-1 rounded border text-xs text-red-600">Hapus</button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
+                {groupedRecent.map(g => (
+                  <>
+                    <tr key={`h-${g.key}`} className="border-t bg-gray-50 dark:bg-gray-800/50">
+                      <td className="p-2 border font-medium" colSpan={5}>{g.label}</td>
+                    </tr>
+                    {g.items.map(r => (
+                      <tr key={r.id} className="border-t">
+                        <td className="p-2 border">{new Date(r.tanggal).toLocaleString()}</td>
+                        <td className="p-2 border">{nameById[r.santriId] || r.santriId}</td>
+                        <td className="p-2 border">
+                          {editingId === r.id ? (
+                            <select className="border rounded px-2 py-1 bg-transparent" value={editStatus} onChange={e=>setEditStatus(e.target.value as any)}>
+                              <option value="HADIR">HADIR</option>
+                              <option value="IZIN">IZIN</option>
+                              <option value="SAKIT">SAKIT</option>
+                              <option value="ALPA">ALPA</option>
+                            </select>
+                          ) : (
+                            <span className={badgeColor(r.status)}>{r.status}</span>
+                          )}
+                        </td>
+                        <td className="p-2 border">
+                          {editingId === r.id ? (
+                            <input className="w-full border rounded px-2 py-1 bg-transparent" value={editCatatan} onChange={e=>setEditCatatan(e.target.value)} placeholder="Catatan" />
+                          ) : (
+                            r.catatan ?? '-'
+                          )}
+                        </td>
+                        <td className="p-2 border">
+                          {editingId === r.id ? (
+                            <div className="flex gap-2">
+                              <button disabled={submitting} onClick={()=>saveEdit(r.id)} className="px-3 py-1 rounded bg-primary text-white text-xs">Simpan</button>
+                              <button disabled={submitting} onClick={cancelEdit} className="px-3 py-1 rounded border text-xs">Batal</button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <button disabled={submitting} onClick={()=>startEdit(r)} className="px-3 py-1 rounded border text-xs">Edit</button>
+                              <button disabled={submitting} onClick={()=>deleteRow(r.id)} className="px-3 py-1 rounded border text-xs text-red-600">Hapus</button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </>
                 ))}
                 {recent.length === 0 && (
                   <tr>
