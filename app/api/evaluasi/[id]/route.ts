@@ -26,12 +26,20 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await requireAuth()
-    assertRole(session, ['ADMIN'])
-    await prisma.evaluasi.delete({ where: { id: params.id } })
+    // Admin boleh hapus apapun; Ustadz boleh hapus miliknya sendiri
+    const role = (session.user as any).role as 'ADMIN'|'USTADZ'|'ORANG_TUA'
+    if (role === 'ADMIN') {
+      await prisma.evaluasi.delete({ where: { id: params.id } })
+    } else if (role === 'USTADZ') {
+      const own = await prisma.evaluasi.findUnique({ where: { id: params.id }, select: { pengujiId: true } })
+      if (!own || own.pengujiId !== (session.user as any).id) throw new Error('FORBIDDEN')
+      await prisma.evaluasi.delete({ where: { id: params.id } })
+    } else {
+      throw new Error('FORBIDDEN')
+    }
     await logAudit({ userId: (session.user as any).id, action: 'DELETE_EVALUASI', entity: 'Evaluasi', entityId: params.id })
     return NextResponse.json({ success: true })
   } catch (e: any) {
     return NextResponse.json({ error: e.message ?? 'Error' }, { status: e.message === 'FORBIDDEN' ? 403 : e.message === 'UNAUTHORIZED' ? 401 : 400 })
   }
 }
-

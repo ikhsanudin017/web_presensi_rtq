@@ -1,10 +1,12 @@
 "use client"
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 type Santri = { id: string; nama: string; kelasId?: string | null }
 type Kelas = { id: string; nama: string }
 
 export default function EvaluasiForm({ santri: initial } : { santri: { id: string; nama: string }[] }) {
+  const router = useRouter()
   const [kelas, setKelas] = useState<Kelas[]>([])
   const [kelasId, setKelasId] = useState<string>('')
   const [allSantri, setAllSantri] = useState<Santri[]>(() => initial as Santri[])
@@ -56,7 +58,7 @@ export default function EvaluasiForm({ santri: initial } : { santri: { id: strin
       body: JSON.stringify({ santriId, nilai: Number(nilai), catatan })
     })
     setLoading(false)
-    if (res.ok) { setOk(true); setCatatan(''); setNilai('') }
+    if (res.ok) { setOk(true); setCatatan(''); setNilai(''); router.refresh() }
     else setError((await res.json()).error || 'Gagal menyimpan')
   }
 
