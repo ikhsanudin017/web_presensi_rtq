@@ -174,14 +174,20 @@ export async function GET(req: Request) {
     const cUstadz = 340
     const cCatatan = 420
     const th = 18
+    const wTanggal = cSantri - cTanggal
+    const wSantri = cStatus - cSantri
+    const wStatus = cUstadz - cStatus
+    const wUstadz = cCatatan - cUstadz
+    const wCatatan = innerWidth - cCatatan
     doc.save().rect(m.left, y - 4, innerWidth, th).fill('#f0f9ff').restore()
     doc.fontSize(10).fillColor('#000')
-    doc.text('Tanggal', col(cTanggal), y)
+    doc.text('Jam', col(cTanggal), y)
     doc.text('Santri', col(cSantri), y)
     doc.text('Status', col(cStatus), y)
     doc.text('Penginput', col(cUstadz), y)
     doc.text('Catatan', col(cCatatan), y)
     y += th
+    // garis bawah header
     doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#94a3b8').stroke(); y += 4
 
     const lineHeight = 14
@@ -201,36 +207,68 @@ export async function GET(req: Request) {
     }
     const groups = Array.from(groupMap.entries()).map(([k,v]) => ({ key: k, ...v }))
     for (const g of groups) {
-      // Section header per hari
-      if (y > maxY - 26) { drawFooter(pageNo); doc.addPage(); pageNo += 1; y = drawHeader(pageNo); doc.save().rect(m.left, y - 4, innerWidth, th).fill('#f0f9ff').restore(); doc.fontSize(10); doc.text('Tanggal', col(cTanggal), y); doc.text('Santri', col(cSantri), y); doc.text('Status', col(cStatus), y); doc.text('Penginput', col(cUstadz), y); doc.text('Catatan', col(cCatatan), y); y += th; doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#94a3b8').stroke(); y += 4 }
-      doc.fontSize(10).fillColor('#0f172a').text(g.label, col(0), y); y += 14
+      // Section header per hari + ringkasan kecil
+      if (y > maxY - 32) {
+        drawFooter(pageNo); doc.addPage(); pageNo += 1; y = drawHeader(pageNo)
+        doc.save().rect(m.left, y - 4, innerWidth, th).fill('#f0f9ff').restore();
+        doc.fontSize(10); doc.text('Jam', col(cTanggal), y); doc.text('Santri', col(cSantri), y); doc.text('Status', col(cStatus), y); doc.text('Penginput', col(cUstadz), y); doc.text('Catatan', col(cCatatan), y)
+        y += th; doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#94a3b8').stroke(); y += 4
+      }
+      const cntH = g.items.filter(it => it.status === 'HADIR').length
+      const cntI = g.items.filter(it => it.status === 'IZIN').length
+      const cntS = g.items.filter(it => it.status === 'SAKIT').length
+      const cntA = g.items.filter(it => it.status === 'ALPA').length
+      doc.fontSize(10).fillColor('#0f172a').text(g.label, col(0), y)
+      const chip = (x: number, color: string, txt: string) => { doc.save().roundedRect(col(x), y - 2, 48, 14, 6).fillOpacity(0.15).fill(color).restore(); doc.fillColor('#0f172a').text(txt, col(x)+6, y) }
+      chip(260, '#16a34a', `H:${cntH}`); chip(312, '#f59e0b', `I:${cntI}`); chip(360, '#fb923c', `S:${cntS}`); chip(408, '#ef4444', `A:${cntA}`)
+      y += 16
       let zebra = false
       for (const r of g.items) {
         const d = new Date(r.tanggal)
-        const tanggal = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+        const jam = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
         const santriNamaRow = (r as any).santri?.nama ?? '-'
         const status = r.status
         const cat = r.catatan ?? ''
         const ust = (r as any).ustadz?.name ?? '-'
 
-        if (y > maxY) {
+        // hitung tinggi baris berdasarkan konten terpanjang
+        const rh = Math.max(
+          lineHeight,
+          doc.heightOfString(jam, { width: wTanggal }),
+          doc.heightOfString(santriNamaRow, { width: wSantri }),
+          doc.heightOfString(status, { width: wStatus }),
+          doc.heightOfString(ust, { width: wUstadz }),
+          doc.heightOfString(cat, { width: wCatatan }),
+        ) + 4
+
+        if (y + rh > maxY) {
           drawFooter(pageNo); doc.addPage(); pageNo += 1; y = drawHeader(pageNo)
+          // redraw table header
           doc.save().rect(m.left, y - 4, innerWidth, th).fill('#f0f9ff').restore();
-          doc.fontSize(10); doc.text('Tanggal', col(cTanggal), y); doc.text('Santri', col(cSantri), y); doc.text('Status', col(cStatus), y); doc.text('Penginput', col(cUstadz), y); doc.text('Catatan', col(cCatatan), y)
+          doc.fontSize(10); doc.text('Jam', col(cTanggal), y); doc.text('Santri', col(cSantri), y); doc.text('Status', col(cStatus), y); doc.text('Penginput', col(cUstadz), y); doc.text('Catatan', col(cCatatan), y)
           y += th; doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#94a3b8').stroke(); y += 4
-          doc.fontSize(10).fillColor('#0f172a').text(g.label, col(0), y); y += 14
+          // redraw group label
+          doc.fontSize(10).fillColor('#0f172a').text(g.label, col(0), y); y += 16
         }
 
-        if (zebra) { doc.save().rect(m.left, y - 2, innerWidth, lineHeight).fill('#f8fafc').restore() }
+        if (zebra) { doc.save().rect(m.left, y - 2, innerWidth, rh).fill('#f8fafc').restore() }
         zebra = !zebra
 
+        // garis grid vertikal
+        const vxs = [0, cSantri, cStatus, cUstadz, cCatatan, innerWidth]
+        doc.strokeColor('#e5e7eb')
+        for (const vx of vxs) {
+          doc.moveTo(m.left + vx, y - 2).lineTo(m.left + vx, y - 2 + rh).stroke()
+        }
+
+        // isi teks
         doc.fillColor('#000').fontSize(10)
-        doc.text(tanggal, col(cTanggal), y, { width: 100 })
-        doc.text(santriNamaRow, col(cSantri), y, { width: 170 })
-        doc.text(status, col(cStatus), y, { width: 60 })
-        doc.text(ust, col(cUstadz), y, { width: 80 })
-        doc.text(cat, col(cCatatan), y, { width: innerWidth - cCatatan })
-        y += lineHeight
+        doc.text(jam, col(cTanggal), y, { width: wTanggal })
+        doc.text(santriNamaRow, col(cSantri), y, { width: wSantri })
+        doc.text(status, col(cStatus), y, { width: wStatus })
+        doc.text(ust, col(cUstadz), y, { width: wUstadz })
+        doc.text(cat, col(cCatatan), y, { width: wCatatan })
+        y += rh
       }
       y += 6
     }
