@@ -21,6 +21,10 @@ export default function PresensiPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editStatus, setEditStatus] = useState<'HADIR'|'IZIN'|'SAKIT'|'ALPA'>('HADIR')
   const [editCatatan, setEditCatatan] = useState<string>('')
+  // Export laporan bulanan
+  const [reportSantriId, setReportSantriId] = useState<string>('')
+  const [reportMonth, setReportMonth] = useState<number>(new Date().getMonth() + 1)
+  const [reportYear, setReportYear] = useState<number>(new Date().getFullYear())
 
   useEffect(() => { loadSantri(); loadKelas(); loadRecent() }, [])
 
@@ -120,6 +124,13 @@ export default function PresensiPage() {
     return qs ? `${base}?${qs}` : base
   }
 
+  function buildMonthlyReportUrl() {
+    if (!reportSantriId) return '#'
+    const m = String(reportMonth)
+    const y = String(reportYear)
+    return `/api/export/perkembangan/pdf?santriId=${reportSantriId}&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}`
+  }
+
   // Group recent by day for display
   const groupedRecent = useMemo(() => {
     const by: { key: string; label: string; items: Presensi[] }[] = []
@@ -203,6 +214,37 @@ export default function PresensiPage() {
             <div className="flex gap-2 ml-auto">
               <a href={buildExportUrl('csv')} className="px-3 py-1.5 rounded border text-sm hover:bg-gray-50 dark:hover:bg-gray-800" target="_blank" rel="noopener noreferrer">Export CSV</a>
               <a href={buildExportUrl('pdf')} className="px-3 py-1.5 rounded border text-sm hover:bg-gray-50 dark:hover:bg-gray-800" target="_blank" rel="noopener noreferrer">Export PDF</a>
+            </div>
+          </div>
+          {/* Laporan Bulanan (PDF Perkembangan) */}
+          <div className="flex flex-wrap items-end gap-2 mb-2 p-2 rounded border">
+            <div>
+              <label className="block text-xs mb-1">Santri</label>
+              <select className="border rounded px-2 py-1 bg-transparent min-w-[200px]" value={reportSantriId} onChange={e=>setReportSantriId(e.target.value)}>
+                <option value="">Pilih santri</option>
+                {santriOptions.map(s => <option key={s.id} value={s.id}>{s.nama}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs mb-1">Bulan</label>
+              <select className="border rounded px-2 py-1 bg-transparent" value={reportMonth} onChange={e=>setReportMonth(Number(e.target.value))}>
+                {Array.from({length:12}, (_,i)=>i+1).map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs mb-1">Tahun</label>
+              <input type="number" className="border rounded px-2 py-1 bg-transparent w-[100px]" value={reportYear} onChange={e=>setReportYear(Number(e.target.value||new Date().getFullYear()))} />
+            </div>
+            <div className="ml-auto">
+              <a
+                href={buildMonthlyReportUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-disabled={!reportSantriId}
+                className={`px-3 py-1.5 rounded border text-sm ${reportSantriId? 'hover:bg-gray-50 dark:hover:bg-gray-800' : 'opacity-50 pointer-events-none'}`}
+              >
+                Laporan Bulanan (PDF)
+              </a>
             </div>
           </div>
           <div className="overflow-x-auto">

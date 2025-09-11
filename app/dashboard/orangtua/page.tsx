@@ -101,6 +101,7 @@ export default async function OrangTuaDashboard() {
                     <th className="text-left px-3 py-2">Nama</th>
                     <th className="text-left px-3 py-2">NIS</th>
                     <th className="text-left px-3 py-2">Kelas</th>
+                    <th className="text-left px-3 py-2">Laporan</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -109,6 +110,15 @@ export default async function OrangTuaDashboard() {
                       <td className="px-3 py-2">{s.nama}</td>
                       <td className="px-3 py-2">{s.nis}</td>
                       <td className="px-3 py-2">{(s as any).kelas?.nama ?? '-'}</td>
+                      <td className="px-3 py-2">
+                        {(() => {
+                          const now = new Date()
+                          const m = now.getMonth() + 1
+                          const y = now.getFullYear()
+                          const url = `/api/export/perkembangan/pdf?santriId=${s.id}&month=${m}&year=${y}`
+                          return <a href={url} target="_blank" rel="noopener noreferrer" className="px-2 py-1 rounded border text-xs hover:bg-gray-50 dark:hover:bg-gray-800">Unduh Bulanan</a>
+                        })()}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
