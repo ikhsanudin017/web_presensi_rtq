@@ -66,20 +66,27 @@ export async function GET(req: Request) {
 
     // Bentuk kolom ramah CSV
     const pad2 = (n: number) => (n < 10 ? '0' + n : '' + n)
-    const fmt = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
-    const mapped = rows.map((r: any) => ({
-      Tanggal: fmt(new Date(r.tanggal)),
-      Santri: r.santri?.nama ?? '-',
-      Kelas: r.santri?.kelas?.nama ?? '-',
-      Status: r.status,
-      Catatan: r.catatan ?? ''
-    }))
+    const fmtDate = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`
+    const fmtTime = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+    const mapped = rows.map((r: any) => {
+      const dt = new Date(r.tanggal)
+      return {
+        Tanggal: fmtDate(dt),
+        Jam: fmtTime(dt),
+        Santri: r.santri?.nama ?? '-',
+        Kelas: r.santri?.kelas?.nama ?? '-',
+        Status: r.status,
+        Catatan: r.catatan ?? '',
+        Penginput: (r as any).ustadz?.name ?? '-',
+      }
+    })
 
     const csv = toCSV(mapped)
+    const fname = `presensi_${fmtDate(gte)}_to_${fmtDate(lte)}.csv`
     return new NextResponse(csv, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': 'attachment; filename="presensi.csv"'
+        'Content-Disposition': `attachment; filename="${fname}"`
       }
     })
   } catch (e: any) {

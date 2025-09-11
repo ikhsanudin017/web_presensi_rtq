@@ -48,7 +48,8 @@ export async function GET(req: Request) {
         tanggal: true,
         status: true,
         catatan: true,
-        santri: { select: { nama: true } },
+        santri: { select: { nama: true, kelas: { select: { nama: true } } } },
+        ustadz: { select: { name: true } },
       },
       orderBy: { tanggal: 'desc' }
     })
@@ -132,6 +133,8 @@ export async function GET(req: Request) {
       doc.text(`Periode: ${range}`, m.left, contentTopY + 6, { width: innerWidth, align: 'center' })
       if (kelasNama) doc.text(`Kelas: ${kelasNama}`, { align: 'center' })
       if (santriNama) doc.text(`Santri: ${santriNama}`, { align: 'center' })
+      const by = (session.user as any).name || (session.user as any).email || 'Pengguna'
+      doc.text(`Disusun oleh: ${by}`, { align: 'center' })
       doc.moveDown(0.3)
       // garis pemisah
       const yLine = doc.y + 6
@@ -167,47 +170,71 @@ export async function GET(req: Request) {
     badge('Alpa', totalA, '#ef4444', 288)
     y += 32
     // Header Tabel Presensi
+    const cTanggal = 0
+    const cSantri = 100
+    const cStatus = 280
+    const cUstadz = 340
+    const cCatatan = 420
+    const th = 18
+    doc.save().rect(m.left, y - 4, innerWidth, th).fill('#f0f9ff').restore()
     doc.fontSize(10).fillColor('#000')
-    doc.text('Tanggal', col(0), y)
-    doc.text('Santri', col(110), y)
-    doc.text('Status', col(300), y)
-    doc.text('Catatan', col(370), y)
-    y += 16
-    doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#888').stroke()
-    y += 6
+    doc.text('Tanggal', col(cTanggal), y)
+    doc.text('Santri', col(cSantri), y)
+    doc.text('Status', col(cStatus), y)
+    doc.text('Penginput', col(cUstadz), y)
+    doc.text('Catatan', col(cCatatan), y)
+    y += th
+    doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#94a3b8').stroke(); y += 4
 
     const lineHeight = 14
     const maxY = doc.page.height - m.bottom - 30
     doc.strokeColor('#000')
 
+    // Group rows per hari dengan heading
+    const keyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+    const groupMap = new Map<string, { label: string; items: any[] }>()
+    const dayFmt = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })
     for (const r of rows) {
-      const tanggal = new Date(r.tanggal).toLocaleDateString('id-ID')
-      const santriNamaRow = r.santri?.nama ?? '-'
-      const status = r.status
-      const cat = r.catatan ?? ''
+      const d = new Date(r.tanggal)
+      const key = keyOf(d)
+      const label = dayFmt.format(d)
+      if (!groupMap.has(key)) groupMap.set(key, { label, items: [] })
+      groupMap.get(key)!.items.push(r)
+    }
+    const groups = Array.from(groupMap.entries()).map(([k,v]) => ({ key: k, ...v }))
+    for (const g of groups) {
+      // Section header per hari
+      if (y > maxY - 26) { drawFooter(pageNo); doc.addPage(); pageNo += 1; y = drawHeader(pageNo); doc.save().rect(m.left, y - 4, innerWidth, th).fill('#f0f9ff').restore(); doc.fontSize(10); doc.text('Tanggal', col(cTanggal), y); doc.text('Santri', col(cSantri), y); doc.text('Status', col(cStatus), y); doc.text('Penginput', col(cUstadz), y); doc.text('Catatan', col(cCatatan), y); y += th; doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#94a3b8').stroke(); y += 4 }
+      doc.fontSize(10).fillColor('#0f172a').text(g.label, col(0), y); y += 14
+      let zebra = false
+      for (const r of g.items) {
+        const d = new Date(r.tanggal)
+        const tanggal = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+        const santriNamaRow = (r as any).santri?.nama ?? '-'
+        const status = r.status
+        const cat = r.catatan ?? ''
+        const ust = (r as any).ustadz?.name ?? '-'
 
-      if (y > maxY) {
-        // Footer halaman sebelumnya
-        drawFooter(pageNo)
-        // Halaman baru
-        doc.addPage()
-        pageNo += 1
-        y = drawHeader(pageNo)
-        doc.fontSize(10)
-        doc.text('Tanggal', col(0), y)
-        doc.text('Santri', col(110), y)
-        doc.text('Status', col(300), y)
-        doc.text('Catatan', col(370), y)
-        y += 16
-        doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#888').stroke(); y += 6
+        if (y > maxY) {
+          drawFooter(pageNo); doc.addPage(); pageNo += 1; y = drawHeader(pageNo)
+          doc.save().rect(m.left, y - 4, innerWidth, th).fill('#f0f9ff').restore();
+          doc.fontSize(10); doc.text('Tanggal', col(cTanggal), y); doc.text('Santri', col(cSantri), y); doc.text('Status', col(cStatus), y); doc.text('Penginput', col(cUstadz), y); doc.text('Catatan', col(cCatatan), y)
+          y += th; doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#94a3b8').stroke(); y += 4
+          doc.fontSize(10).fillColor('#0f172a').text(g.label, col(0), y); y += 14
+        }
+
+        if (zebra) { doc.save().rect(m.left, y - 2, innerWidth, lineHeight).fill('#f8fafc').restore() }
+        zebra = !zebra
+
+        doc.fillColor('#000').fontSize(10)
+        doc.text(tanggal, col(cTanggal), y, { width: 100 })
+        doc.text(santriNamaRow, col(cSantri), y, { width: 170 })
+        doc.text(status, col(cStatus), y, { width: 60 })
+        doc.text(ust, col(cUstadz), y, { width: 80 })
+        doc.text(cat, col(cCatatan), y, { width: innerWidth - cCatatan })
+        y += lineHeight
       }
-
-      doc.fillColor('#000').fontSize(10)
-      doc.text(tanggal, col(0), y, { width: 100 })
-      doc.text(santriNamaRow, col(110), y, { width: 180 })
-      doc.text(status, col(300), y, { width: 60 })
-      doc.text(cat, col(370), y, { width: innerWidth - 370 })
-      y += lineHeight
+      y += 6
     }
 
     // Spacer sebelum Evaluasi
@@ -216,12 +243,13 @@ export async function GET(req: Request) {
     doc.fontSize(12).text('Evaluasi', col(0), y)
     y += 16
     doc.fontSize(10)
+    doc.save().rect(m.left, y - 4, innerWidth, th).fill('#f0f9ff').restore()
     doc.text('Tanggal', col(0), y)
     doc.text('Santri', col(110), y)
     doc.text('Nilai', col(300), y)
     doc.text('Catatan', col(370), y)
-    y += 16
-    doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#888').stroke(); y += 6
+    y += th
+    doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#94a3b8').stroke(); y += 6
 
     for (const e of evals) {
       if (y > maxY) { drawFooter(pageNo); doc.addPage(); pageNo += 1; y = drawHeader(pageNo); doc.fontSize(10); doc.text('Tanggal', col(0), y); doc.text('Santri', col(110), y); doc.text('Nilai', col(300), y); doc.text('Catatan', col(370), y); y += 16; doc.moveTo(m.left, y).lineTo(m.left + innerWidth, y).strokeColor('#888').stroke(); y += 6 }
