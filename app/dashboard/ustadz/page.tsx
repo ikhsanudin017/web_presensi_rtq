@@ -39,22 +39,23 @@ export default async function UstadzDashboard() {
 
   // Total santri global (tidak dibatasi pengajar)
   const totalSantri = await prisma.santri.count()
-  const todayHadir = await prisma.presensi.count({ where: { createdBy: user.id, tanggal: { gte: sod, lt: eod }, status: 'HADIR' } })
-  const hafalanMingguIni = await prisma.hafalan.count({ where: { updatedBy: user.id, updatedAt: { gte: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000) } } })
+  // Presensi metrics are global (tidak dibatasi pengajar)
+  const todayHadir = await prisma.presensi.count({ where: { tanggal: { gte: sod, lt: eod }, status: 'HADIR' } })
+  const hafalanMingguIni = await prisma.hafalan.count({ where: { updatedAt: { gte: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000) } } })
   const unreadNotif = await prisma.notifikasi.count({ where: { userId: user.id, read: false } })
   const recentPresensi = await prisma.presensi.findMany({
-    where: { createdBy: user.id },
+    where: {},
     orderBy: { createdAt: 'desc' },
     take: 5,
     include: { santri: { select: { nama: true } } },
   })
   const rawPresensi = await prisma.presensi.findMany({
-    where: { createdBy: user.id, tanggal: { gte: last7 } },
+    where: { tanggal: { gte: last7 } },
     select: { tanggal: true, status: true },
     orderBy: { tanggal: 'asc' },
   })
   const records30 = await prisma.presensi.findMany({
-    where: { createdBy: user.id, tanggal: { gte: from30, lte: new Date() } },
+    where: { tanggal: { gte: from30, lte: new Date() } },
     select: { tanggal: true, status: true },
     orderBy: { tanggal: 'asc' },
   })
