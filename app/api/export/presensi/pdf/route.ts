@@ -81,13 +81,11 @@ export async function GET(req: Request) {
       santriNama = s?.nama ?? santriId
     }
 
-    // Gunakan versi standalone agar bundler Next menyertakan data font standar (hindari ENOENT Helvetica.afm)
-    // @ts-ignore
-    const PDFMod = await import('pdfkit/js/pdfkit.standalone.js')
+    // Pakai modul Node PDFKit biasa (runtime: nodejs)
+    const PDFMod = await import('pdfkit')
     const PDFDocument: any = (PDFMod as any).default || (PDFMod as any)
     const doc = new PDFDocument({ size: 'A4', margin: 40 }) as any
-    // Pakai font standar supaya konsisten
-    try { doc.font('Times-Roman') } catch {}
+    // Gunakan font default PDFKit; hindari pemanggilan manual font standar agar kompatibel di berbagai env
 
     const buffers: Buffer[] = []
     doc.on('data', (b: Buffer) => buffers.push(b))
