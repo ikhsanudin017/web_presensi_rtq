@@ -1,10 +1,15 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { GraduationCap, Users, ArrowRight, Sparkles } from 'lucide-react'
+import ThemeToggle from '@/components/theme-toggle'
 
 export default function Home() {
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center gap-8 p-6 overflow-hidden hero-clean soft-hero">
+      {/* Theme toggle (top-right) */}
+      <div className="absolute right-4 top-4 md:right-6 md:top-6">
+        <ThemeToggle />
+      </div>
       {/* Background layers (subtle) */}
       <div className="pointer-events-none absolute inset-0 -z-20">
         <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.08] dot-grid" />
