@@ -178,12 +178,7 @@ export default async function UstadzDashboard() {
           <StatCard title="Alpa 7 Hari" value={totals7.alpa} />
         </section>
 
-        {/* Quick actions */}
-        <section className="grid gap-3 grid-cols-2 md:grid-cols-4">
-          <a href="/dashboard/ustadz/presensi" className="p-4 rounded-xl border hover:shadow bg-white dark:bg-base-900">Presensi Harian</a>
-          <a href="/dashboard/ustadz/evaluasi" className="p-4 rounded-xl border hover:shadow bg-white dark:bg-base-900">Input Evaluasi</a>
-          <a href="/dashboard/ustadz/santri/new" className="p-4 rounded-xl border hover:shadow bg-white dark:bg-base-900">Tambah Santri</a>
-        </section>
+        {/* Quick actions removed as requested */}
       </main>
     </div>
   )
